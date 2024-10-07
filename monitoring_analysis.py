@@ -25,32 +25,20 @@ def transform_monitoring_data(data, threshold=0.3):
     
     return data_cleaned
 
-def analyze_monitoring_data(data):
-    if data.empty:
-        print("No hay datos suficientes para analizar.")
-        return None
-    
-    try:
-        stats = data.describe()
-        return stats
-    except Exception as e:
-        print(f"Error al analizar los datos: {e}")
-        return None
-
 def monitoring_etl(file_path, output_file, threshold=0.3):
     
     data = extract_monitoring_data(file_path)
+    
     if data is not None:
         transformed_data = transform_monitoring_data(data, threshold=threshold)
         if transformed_data.empty:
-            print(f"Advertencia: El archivo {file_path} no tiene columnas con suficientes datos.")
+            print(f"Warning: File {file_path} does not have columns with enough data.")
         else:
             transformed_data.to_csv(output_file, index=False)
-            print(f"Archivo transformado guardado en {output_file}")
-            stats = analyze_monitoring_data(transformed_data)
-            return stats
+            print(f"Transformed file saved in {output_file}")
+            return transformed_data
     else:
-        print(f"No se pudo procesar el archivo {file_path} correctamente.")
+        print(f"The file {file_path} could not be processed correctly.")
         return None
 
 def separate_and_order_columns(df):
