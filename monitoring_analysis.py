@@ -38,7 +38,7 @@ def analyze_monitoring_data(data):
         return None
 
 def monitoring_etl(file_path, output_file, threshold=0.3):
-    # Extract
+    
     data = extract_monitoring_data(file_path)
     if data is not None:
         transformed_data = transform_monitoring_data(data, threshold=threshold)
@@ -52,3 +52,66 @@ def monitoring_etl(file_path, output_file, threshold=0.3):
     else:
         print(f"No se pudo procesar el archivo {file_path} correctamente.")
         return None
+
+def separate_and_order_columns(df):
+    common_columns = ['BM_RunTimeSecondsE', 'BM_FramesPerSecondE']
+    gpu_columns = [col for col in df.columns if 'GPU' in col]
+    cpu_columns = [col for col in df.columns if 'CPU' in col]
+
+    common_columns = [col for col in common_columns if col in df.columns]
+
+    df_gpu = df[common_columns + gpu_columns]
+    df_cpu = df[common_columns + cpu_columns]
+
+    cpu_columns_only = [col for col in df_cpu.columns if col not in common_columns]
+
+    temp_columns = sorted([col for col in cpu_columns_only if 'Temperature' in col], key=lambda x: int(x.split('_')[-1]))
+    freq_columns = sorted([col for col in cpu_columns_only if 'ClockFrequency' in col], key=lambda x: int(x.split('_')[-1]))
+
+    ordered_cpu_columns = [val for pair in zip(temp_columns, freq_columns) for val in pair]
+    ordered_cpu_columns = common_columns + ordered_cpu_columns
+
+    df_cpu = df_cpu[ordered_cpu_columns]
+    
+    return df_gpu, df_cpu
+
+def validate_cpu_data(df_cpu):
+    missing_values = df_cpu.isnull().sum()
+
+    invalid_temperature = df_cpu[[col for col in df_cpu.columns if 'Temperature' in col]].apply(lambda x: (x < 0) | (x > 100)).sum()
+
+    invalid_frequency = df_cpu[[col for col in df_cpu.columns if 'ClockFrequency' in col]].apply(lambda x: (x < 0) | (x > 5000)).sum()
+
+    duplicate_rows = df_cpu.duplicated().sum()
+
+    data_types = df_cpu.dtypes
+
+    validation_results_gpu = pd.DataFrame({
+        'Missing values': missing_values,
+        'Invalid temperature': invalid_temperature,
+        'Invalid Frequency': invalid_frequency,
+        'Duplicate Rows': [duplicate_rows] * len(missing_values),
+        'Data Types': data_types
+    })
+    
+    return validation_results_gpu
+
+def validate_gpu_data(df_gpu):
+    missing_values = df_gpu.isnull().sum()
+
+    data_types = df_gpu.dtypes
+
+    invalid_temperature = df_gpu[[col for col in df_gpu.columns if 'Temperature' in col]].apply(lambda x: (x < 0) | (x > 100)).sum()
+    invalid_frequency = df_gpu[[col for col in df_gpu.columns if 'ClockFrequency' in col]].apply(lambda x: (x < 0) | (x > 5000)).sum()
+
+    duplicate_rows = df_gpu.duplicated().sum()
+
+    validation_results_gpu = pd.DataFrame({
+        'Missing Values': missing_values,
+        'Invalid Temperature': invalid_temperature,
+        'Invalid Frequency': invalid_frequency,
+        'Duplicate Rows': [duplicate_rows] * len(missing_values),
+        'Data Types': data_types
+    })
+
+    return validation_results_gpu
