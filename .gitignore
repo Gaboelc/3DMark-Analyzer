@@ -38,6 +38,7 @@ pyvenv.cfg
 .venv
 pip-selfcheck.json
 Lib/*.py
+share/*
 
 ### VisualStudioCode ###
 .vscode/*
