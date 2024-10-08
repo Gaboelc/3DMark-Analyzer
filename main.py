@@ -1,6 +1,7 @@
 import os
 from parsers.parser import ZipParser
 from parsers.monitoring_parser import separate_and_order_columns, validate_cpu_data, validate_gpu_data, monitoring_etl
+from parsers.results_parser import extract_results_data
 
 def process_3dmark_files(raw_directory):
 
@@ -15,12 +16,13 @@ def process_3dmark_files(raw_directory):
             temp_dir = parser.extract_to_temp()
 
             monitoring_file = os.path.join(temp_dir, 'Monitoring.csv')
+            result_file = os.path.join(temp_dir, 'Result.xml')
             if os.path.exists(monitoring_file):
                 output_file = os.path.join(temp_dir, 'Monitoring_cleaned.csv')
-                df = monitoring_etl(monitoring_file, output_file, threshold=0.3)
+                df_monitoring = monitoring_etl(monitoring_file, output_file, threshold=0.3)
                 
-                if df is not None:
-                    df_gpu, df_cpu = separate_and_order_columns(df)
+                if df_monitoring is not None:
+                    df_gpu, df_cpu = separate_and_order_columns(df_monitoring)
 
                     cpu_validation_results = validate_cpu_data(df_cpu)
                     print("\n CPU validation results:")
@@ -35,6 +37,51 @@ def process_3dmark_files(raw_directory):
                     
                     print("\n GPU Dataframe:")
                     print(df_gpu)
+                    
+                else:
+                    print(f"\n Warning: Could not process file {filename}.")
+            else:
+                print(f"\n The file Monitoring.csv was not found in {filename}")
+            
+            if os.path.exists(result_file):
+                df_results = extract_results_data(result_file) 
+                
+                if df_results is not None:
+                    results_target = df_results[df_results.columns[df_results.columns.str.contains('ForPass')]].dropna(axis=1, how='all').dropna(how='all')
+                    
+                    results = df_results[df_results.columns[~df_results.columns.str.contains("ForPass")]].dropna(axis=1, how='all').dropna(how='all')
+                    
+                    if 'benchmarkRunId' in results_target.columns:
+                        results_target = results_target.drop(columns=['benchmarkRunId'])
+                    if 'passIndex' in results_target.columns:
+                        results_target = results_target.drop(columns=['passIndex'])
+                        
+                    if 'benchmarkRunId' in results.columns:
+                        results = results.drop(columns=['benchmarkRunId'])
+                    if 'passIndex' in results.columns:
+                        print("passIndex")
+                        results = results.drop(columns=['passIndex'])
+                        results.iloc[0] = results.iloc[0].combine_first(results.iloc[1])
+                        results = results.drop(index=1).reset_index(drop=True)
+                    
+                    print("\n Results Dataframe:")
+                    print(results)
+                    
+                    print("\n Results_target Dataframe:")
+                    print(results_target)
+                    
+                else:
+                    print(f"\n Warning: Could not process file {filename}.")
+            else:
+                print(f"\n The file Result.xml was not found in {filename}")
+                
+            if zip(df_gpu, df_cpu, df_results) is not None:
+                
+                print(f"\n File {filename} processed successfully.")
+                
+                #return df_gpu, df_cpu, df_results
+            else:
+                print(f"\n Warning: Could not process file {filename}.")
             
             parser.clean_up()
 
