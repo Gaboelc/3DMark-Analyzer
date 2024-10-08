@@ -1,6 +1,6 @@
 import os
-from parser import ZipParser
-from monitoring_analysis import separate_and_order_columns, validate_cpu_data, validate_gpu_data, monitoring_etl
+from parsers.parser import ZipParser
+from parsers.monitoring_parser import separate_and_order_columns, validate_cpu_data, validate_gpu_data, monitoring_etl
 
 def process_3dmark_files(raw_directory):
 
