@@ -80,7 +80,7 @@ def process_3dmark_files(raw_directory):
                 
             if os.path.exists(arielle_file): 
                 
-                df_app_info, df_hardware_info = extract_arielle_data(arielle_file)
+                df_app_info, df_hardware_info, df_test_info, df_workload_sets = extract_arielle_data(arielle_file)
                 
                 if df_app_info is not None and not df_app_info.empty:
                     print("\n Application Information:")
@@ -89,15 +89,27 @@ def process_3dmark_files(raw_directory):
                     print(f"\n Warning: Could not extract application info from {arielle_file}.")
                 
                 if df_hardware_info is not None and not df_hardware_info.empty:
-                    print("\n Hardware information:")
+                    print("\nHardware Information:")
                     print(df_hardware_info)
+                else:
+                    print(f"\n Warning: Could not extract hardware info from {arielle_file}.")
+                    
+                if df_test_info is not None and not df_test_info.empty:
+                    print("\nTest Info Information:")
+                    print(df_test_info)
+                else:
+                    print(f"\n Warning: Could not extract hardware info from {arielle_file}.")
+                
+                if df_workload_sets is not None and not df_workload_sets.empty:
+                    print("\nWorkload Set Information:")
+                    print(df_workload_sets)
                 else:
                     print(f"\n Warning: Could not extract hardware info from {arielle_file}.")
                     
             else:
                 print(f"\n The file Arielle.xml was not found in {filename}")
                 
-            if zip(df_gpu, df_cpu, results_target, results) is not None:
+            if zip(df_gpu, df_cpu, results_target, results, df_app_info, df_hardware_info, df_test_info, df_workload_sets) is not None:
                 print(f"\n File {filename} processed successfully.")
             else:
                 print(f"\n Warning: Could not process file {filename}.")
