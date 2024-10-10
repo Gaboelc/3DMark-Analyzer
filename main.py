@@ -2,6 +2,8 @@ import os
 from parsers.parser import ZipParser
 from parsers.monitoring_parser import separate_and_order_columns, validate_cpu_data, validate_gpu_data, monitoring_etl
 from parsers.results_parser import extract_results_data
+from parsers.arielle_parser import extract_arielle_data
+import pandas as pd
 
 def process_3dmark_files(raw_directory):
 
@@ -17,6 +19,8 @@ def process_3dmark_files(raw_directory):
 
             monitoring_file = os.path.join(temp_dir, 'Monitoring.csv')
             result_file = os.path.join(temp_dir, 'Result.xml')
+            arielle_file = os.path.join(temp_dir, 'Arielle.xml')
+            
             if os.path.exists(monitoring_file):
                 output_file = os.path.join(temp_dir, 'Monitoring_cleaned.csv')
                 df_monitoring = monitoring_etl(monitoring_file, output_file, threshold=0.3)
@@ -29,7 +33,7 @@ def process_3dmark_files(raw_directory):
                     print(cpu_validation_results)
                     
                     gpu_validation_results = validate_gpu_data(df_gpu)
-                    print("\n CPU validation results:")
+                    print("\n GPU validation results:")
                     print(gpu_validation_results)
 
                     print("\n CPU Dataframe:")
@@ -59,7 +63,6 @@ def process_3dmark_files(raw_directory):
                     if 'benchmarkRunId' in results.columns:
                         results = results.drop(columns=['benchmarkRunId'])
                     if 'passIndex' in results.columns:
-                        print("passIndex")
                         results = results.drop(columns=['passIndex'])
                         results.iloc[0] = results.iloc[0].combine_first(results.iloc[1])
                         results = results.drop(index=1).reset_index(drop=True)
@@ -75,11 +78,27 @@ def process_3dmark_files(raw_directory):
             else:
                 print(f"\n The file Result.xml was not found in {filename}")
                 
-            if zip(df_gpu, df_cpu, df_results) is not None:
+            if os.path.exists(arielle_file): 
                 
+                df_app_info, df_hardware_info = extract_arielle_data(arielle_file)
+                
+                if df_app_info is not None and not df_app_info.empty:
+                    print("\n Application Information:")
+                    print(df_app_info)
+                else:
+                    print(f"\n Warning: Could not extract application info from {arielle_file}.")
+                
+                if df_hardware_info is not None and not df_hardware_info.empty:
+                    print("\n Hardware information:")
+                    print(df_hardware_info)
+                else:
+                    print(f"\n Warning: Could not extract hardware info from {arielle_file}.")
+                    
+            else:
+                print(f"\n The file Arielle.xml was not found in {filename}")
+                
+            if zip(df_gpu, df_cpu, results_target, results) is not None:
                 print(f"\n File {filename} processed successfully.")
-                
-                #return df_gpu, df_cpu, df_results
             else:
                 print(f"\n Warning: Could not process file {filename}.")
             
