@@ -13,6 +13,8 @@ def extract_arielle_data(file_path):
                 'value': info.find('value').text
             })
         df_app_info = pd.DataFrame(app_info_data)
+        
+        df_app_info = df_app_info[~df_app_info['name'].isin(['install_id', 'benchmark_run_id', 'upgrade_key'])].reset_index(drop=True)
 
         hardware_data = []
         for setting in root.find('settings').findall('setting'):
@@ -46,9 +48,10 @@ def extract_arielle_data(file_path):
         df_test_info_full = pd.DataFrame(test_info_data)
 
         df_workload_sets = df_test_info_full[df_test_info_full['type'] == 'workload_set'].reset_index(drop=True)
-        df_test_info = df_test_info_full[df_test_info_full['type'] != 'workload_set'].reset_index(drop=True)
         
         df_workload_sets = df_workload_sets.drop(columns=[col for col in ['test_run_type', 'version'] if col in df_workload_sets.columns], errors='ignore')
+        
+        df_test_info = df_test_info_full[df_test_info_full['type'] != 'workload_set'].reset_index(drop=True)
 
         return df_app_info, df_hardware_info, df_test_info, df_workload_sets
 
