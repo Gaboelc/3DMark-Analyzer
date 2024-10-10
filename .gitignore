@@ -44,4 +44,4 @@ share/*
 .vscode/*
 
 ### Data ###
-data/*.3dmark-results
+*.3dmark-result
