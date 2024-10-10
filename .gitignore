@@ -42,3 +42,6 @@ share/*
 
 ### VisualStudioCode ###
 .vscode/*
+
+### Data ###
+data/*.3dmark-results
