@@ -5,6 +5,11 @@ from parsers.results_parser import extract_results_data
 from parsers.arielle_parser import extract_arielle_data
 import pandas as pd
 
+max_temp_cpu = 90.0
+max_temp_gpu = 75.0
+max_freq_cpu = 5486
+max_freq_gpu = 2475
+
 def process_3dmark_files(raw_directory):
 
     for filename in os.listdir(raw_directory):
@@ -28,11 +33,11 @@ def process_3dmark_files(raw_directory):
                 if df_monitoring is not None:
                     df_gpu, df_cpu = separate_and_order_columns(df_monitoring)
 
-                    cpu_validation_results = validate_cpu_data(df_cpu)
+                    cpu_validation_results = validate_cpu_data(df_cpu, max_temp_cpu, max_freq_cpu)
                     print("\n CPU validation results:")
                     print(cpu_validation_results)
                     
-                    gpu_validation_results = validate_gpu_data(df_gpu)
+                    gpu_validation_results = validate_gpu_data(df_gpu, max_temp_gpu, max_freq_gpu)
                     print("\n GPU validation results:")
                     print(gpu_validation_results)
 

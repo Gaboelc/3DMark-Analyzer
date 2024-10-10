@@ -63,12 +63,12 @@ def separate_and_order_columns(df):
     
     return df_gpu, df_cpu
 
-def validate_cpu_data(df_cpu):
+def validate_cpu_data(df_cpu, max_temperature=float, max_frequency=int):
     missing_values = df_cpu.isnull().sum()
 
-    invalid_temperature = df_cpu[[col for col in df_cpu.columns if 'Temperature' in col]].apply(lambda x: (x < 0) | (x > 100)).sum()
+    invalid_temperature = df_cpu[[col for col in df_cpu.columns if 'Temperature' in col]].apply(lambda x: (x < 0) | (x > max_temperature)).sum()
 
-    invalid_frequency = df_cpu[[col for col in df_cpu.columns if 'ClockFrequency' in col]].apply(lambda x: (x < 0) | (x > 5000)).sum()
+    invalid_frequency = df_cpu[[col for col in df_cpu.columns if 'ClockFrequency' in col]].apply(lambda x: (x < 0) | (x > max_frequency)).sum()
 
     duplicate_rows = df_cpu.duplicated().sum()
 
@@ -84,13 +84,13 @@ def validate_cpu_data(df_cpu):
     
     return validation_results_gpu
 
-def validate_gpu_data(df_gpu):
+def validate_gpu_data(df_gpu, max_temperature=float, max_frequency=int):
     missing_values = df_gpu.isnull().sum()
 
     data_types = df_gpu.dtypes
 
-    invalid_temperature = df_gpu[[col for col in df_gpu.columns if 'Temperature' in col]].apply(lambda x: (x < 0) | (x > 100)).sum()
-    invalid_frequency = df_gpu[[col for col in df_gpu.columns if 'ClockFrequency' in col]].apply(lambda x: (x < 0) | (x > 5000)).sum()
+    invalid_temperature = df_gpu[[col for col in df_gpu.columns if 'Temperature' in col]].apply(lambda x: (x < 0) | (x > max_temperature)).sum()
+    invalid_frequency = df_gpu[[col for col in df_gpu.columns if 'CoreClock' in col]].apply(lambda x: (x < 0) | (x > max_frequency)).sum()
 
     duplicate_rows = df_gpu.duplicated().sum()
 
