@@ -39,9 +39,11 @@ pyvenv.cfg
 pip-selfcheck.json
 Lib/*.py
 share/*
+etc/*
 
 ### VisualStudioCode ###
 .vscode/*
 
 ### Data ###
 *.3dmark-result
+*.csv
